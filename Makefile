@@ -18,7 +18,7 @@ test:
 	poetry run pytest
 
 test-coverage:
-	poetry run pytest --cov=page_loader tests/ --cov-report xml
+	poetry run pytest --cov=page_loader/ tests/ --cov-report xml
 
 lint:
 	poetry run flake8 page_loader
