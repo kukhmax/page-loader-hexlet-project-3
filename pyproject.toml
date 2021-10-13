@@ -15,6 +15,9 @@ pytest = "^6.2.5"
 flake8 = "^4.0.1"
 mypy = "^0.910"
 
+[tool.poetry.scripts]
+page-loader = "page_loader.scripts.page_loader:main"
+
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"

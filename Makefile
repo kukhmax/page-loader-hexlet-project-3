@@ -18,12 +18,12 @@ test:
 	poetry run pytest
 
 test-coverage:
-	poetry run pytest --cov=gendiff tests/ --cov-report xml
+	poetry run pytest --cov=page_loader tests/ --cov-report xml
 
 lint:
-	poetry run flake8 gendiff
+	poetry run flake8 page_loader
 	poetry run flake8 tests
-	poetry run mypy gendiff
+	poetry run mypy page_loader
 
 selfcheck:
 	poetry check
