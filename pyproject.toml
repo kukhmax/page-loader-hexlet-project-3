@@ -9,12 +9,15 @@ packages = [
 
 [tool.poetry.dependencies]
 python = "^3.8"
+requests = "^2.26.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.5"
 flake8 = "^4.0.1"
 mypy = "^0.910"
 pytest-cov = "^3.0.0"
+requests-mock = "^1.9.3"
+types-requests = "^2.25.10"
 
 [tool.poetry.scripts]
 page-loader = "page_loader.scripts.page_loader:main"
