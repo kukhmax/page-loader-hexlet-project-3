@@ -11,7 +11,7 @@ def main():
     parser.add_argument(
         '-o', '--output',
         default=CWD,
-        help='set path to dir (default: cwd)'
+        help='output dir (default: working dir)'
     )
     args = parser.parse_args()
 
