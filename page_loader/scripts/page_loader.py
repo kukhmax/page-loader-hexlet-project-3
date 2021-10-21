@@ -1,5 +1,5 @@
 import argparse
-from page_loader.engine import download, CWD
+from page_loader.engine import download, PWD
 
 
 def main():
@@ -10,7 +10,7 @@ def main():
     # optional arguments
     parser.add_argument(
         '-o', '--output',
-        default=CWD,
+        default=PWD,
         help='output dir (default: working dir)'
     )
     args = parser.parse_args()

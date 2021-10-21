@@ -4,13 +4,17 @@ from bs4 import BeautifulSoup
 import os
 import requests
 import re
-from page_loader.engine import download
 from pathlib import Path
 from urllib.parse import urlparse
+from typing import Any
+
+
 PWD = os.getcwd()
 
 
-def get_image_url(url, src):
+def get_image_url(url: str, src: str) -> Any:
+    """Creates a link to download the image"""
+
     domain = urlparse(url).netloc
     src_netloc = urlparse(src).netloc
     if src_netloc == domain:
@@ -21,7 +25,16 @@ def get_image_url(url, src):
         return None
 
 
-def download_images(url, path_to_html, path):
+def download_images(url: str, path_to_html: str) -> str:
+    """Downloads images from a HTML file and replaces their paths
+
+        Args:
+            url(str): url of the page we want to download
+            path_to_html(str): path to the saved html file
+
+        Retruns:
+            path_to_html(str): path to the modified html file
+    """
     with open(path_to_html) as f:
         dir = re.sub('.html$', '_files', path_to_html)
         os.mkdir(dir)
@@ -34,7 +47,7 @@ def download_images(url, path_to_html, path):
                 if suffix == ".png" or suffix == ".jpg":
                     response = requests.get(link_to_image)
                     file_name = re.sub(r'\-(?=(png|jpg)$)', '.',
-                                    re.sub(r"[^(a-zA-Z0-9]+", '-', src))
+                                       re.sub(r"[^(a-zA-Z0-9]+", '-', src))
                     path_to_image = os.path.join(dir, file_name)
                     tag = soup.find(src=src)
                     tag['src'] = path_to_image
@@ -44,6 +57,3 @@ def download_images(url, path_to_html, path):
     with open(path_to_html, 'w+') as update_file:
         update_file.write(soup.prettify())
     return path_to_html
-
-# path = download('https://python-scripts.com/beautifulsoup-html-parsing', PWD )
-# download_images('https://python-scripts.com/beautifulsoup-html-parsing', path, PWD)
