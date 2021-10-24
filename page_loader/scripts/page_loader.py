@@ -1,5 +1,5 @@
 import argparse
-from page_loader.engine import download, PWD
+from page_loader.engine import download, WD
 
 
 def main():
@@ -10,15 +10,16 @@ def main():
     # optional arguments
     parser.add_argument(
         '-o', '--output',
-        default=PWD,
+        default=WD,
         help='output dir (default: working dir)'
     )
     args = parser.parse_args()
 
-    print(download(
+    path_to_html_file = download(
         args.url,
         args.output
-    ))
+    )
+    print(path_to_html_file)
 
 
 if __name__ == '__main__':
