@@ -1,5 +1,13 @@
 import argparse
 from page_loader.engine import download, WD
+import requests
+import logging.config
+import logging
+from page_loader.settings_log import logger_config
+
+logging.config.dictConfig(logger_config)
+
+logger = logging.getLogger('app_logger')
 
 
 def main():
@@ -15,11 +23,16 @@ def main():
     )
     args = parser.parse_args()
 
-    path_to_html_file = download(
-        args.url,
-        args.output
-    )
-    print(path_to_html_file)
+    try:
+        download(
+            args.url,
+            args.output
+        )
+    except requests.exceptions.ConnectionError:
+        logger.exception('ConnectionError')
+        print('you have problems connecting to the internet!!!')
+    else:
+        logger.debug(f'download({args.url}) run')
 
 
 if __name__ == '__main__':

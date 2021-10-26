@@ -23,8 +23,8 @@ def download_images(url, path_to_html, soup, dir):
         link_to_image = get_resourсe_url(url, src)
         if link_to_image:
             suffix = Path(src).suffix.lower()
+            response = requests.get(link_to_image)
             if suffix == ".png" or suffix == ".jpg":
-                response = requests.get(link_to_image)
                 file_name = re.sub(r'\-(?=(png|jpg)$)', '.',
                                    re.sub(r"[^a-zA-Z0-9]+", '-',
                                           f'{urlparse(link_to_image).netloc}\

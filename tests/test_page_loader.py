@@ -1,7 +1,7 @@
 from page_loader.engine import download_html, update_url_to_file_name
 from page_loader.engine import make_prettify
 from page_loader.parser_images import download_images
-from page_loader.parser_scripts import download_scripts
+from page_loader.parser_resources import download_resources
 from page_loader.utilities import make_dir_and_soup
 import requests_mock
 import pytest
@@ -53,7 +53,7 @@ def test_download_image(tmp_path):
                 assert res == f1.read()
 
 
-def test_download_scripts(tmp_path):
+def test_download_resourses(tmp_path):
     with open('tests/fixtures/scripts.html') as f:
         text = f.read()
         with requests_mock.Mocker() as mock:
@@ -61,8 +61,8 @@ def test_download_scripts(tmp_path):
             path_to_html = download_html('https://ru.hexlet.io/courses',
                                          tmp_path)
         soup, dir = make_dir_and_soup(path_to_html)
-        soup = download_scripts(
-            'https://ru.hexlet.io/courses', path_to_html, soup, dir
+        soup = download_resources(
+            'https://ru.hexlet.io/courses', soup, dir
         )
         path_to_html = make_prettify(path_to_html, soup)
         with open(path_to_html) as f:
