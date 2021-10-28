@@ -28,7 +28,7 @@ def make_dir_and_soup(path_to_html: str) -> Tuple[Any, str]:
         try:
             os.mkdir(dir)
         except FileExistsError:
-            logger_util.exception(f"dirrectory '{dir}' is exists")
+            logger_util.exception(f"directory '{dir}' is exists")
             shutil.rmtree(dir)
             os.mkdir(dir)
         soup = BeautifulSoup(f, 'html.parser')

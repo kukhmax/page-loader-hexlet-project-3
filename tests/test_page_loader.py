@@ -3,9 +3,13 @@ from page_loader.engine import make_prettify
 from page_loader.parser_images import download_images
 from page_loader.parser_resources import download_resources
 from page_loader.utilities import make_dir_and_soup
+from page_loader.engine import download
+import tempfile
 import requests_mock
+import requests
 import pytest
 import re
+import os
 
 
 @pytest.mark.parametrize('url, path_to_dir, result', [
@@ -70,3 +74,13 @@ def test_download_resourses(tmp_path):
             res = re.sub(r'(?<=src=\"|ref=\")[\/\-\_a-zA-Z0-9]{0,}(?=ru-hexlet-io-courses_f)', '', content)  # noqa E501
             with open('tests/fixtures/scripts_result.html') as f1:
                 assert res == f1.read()
+
+
+def test_isexceptions(tmp_path):
+    with requests_mock.Mocker() as m:
+        url = "https://ru.hexlet.io/courses"
+        m.get(url, exс=requests.exceptions.HTTPError)
+        with pytest.raises(requests.exceptions.HTTPError) as excinfo:
+            download_html(url, tmp_path)
+        assert excinfo.type is requests.exceptions.HTTPError
+        assert r'HTTP status codes reference [0-9]*' in str(excinfo.value)

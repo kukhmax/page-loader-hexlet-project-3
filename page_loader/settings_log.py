@@ -22,6 +22,11 @@ logger_config = {
         }
     },
     'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'level': 'DEBUG',
+            'formatter': 'std_format'
+        },
         'file': {
             '()': MegsHandler,
             'level': 'DEBUG',
@@ -33,6 +38,10 @@ logger_config = {
         'app_logger': {
             'level': 'DEBUG',
             'handlers': ['file']
+        },
+        'app_logger.response': {
+            'level': 'DEBUG',
+            'handlers': ['console', 'file']
         }
     }
 }

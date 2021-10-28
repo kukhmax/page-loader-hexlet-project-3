@@ -7,6 +7,11 @@ from pathlib import Path
 from urllib.parse import urlparse
 from page_loader.utilities import get_resourсe_url
 from typing import Any, List, Tuple
+import logging
+import urllib3
+
+logger_pars = logging.getLogger('app_logger.pars')
+logger_resp = logging.getLogger('app_logger.response')
 
 SRC, IMG, SCRIPT, HREF, LINK = 'src', 'img', 'script', 'href', 'link'
 
@@ -26,7 +31,13 @@ def download_resources(url: str, soup: Any, dir: str) -> Any:  # noqa C901
     for link in list_of_links:
         link_to_resource = get_resourсe_url(url, link[0])
         if link_to_resource:
-            response = requests.get(link_to_resource)
+            try:
+                response = requests.get(link_to_resource)
+            except requests.exceptions.HTTPError:
+                logger_pars.debug(f'HTTP response status: \
+{requests.get(link_to_resource).status_code} :: URL: {url}')
+                logger_resp.error(f'HTTP status codes reference \
+{requests.get(link_to_resource).status_code} :: URL: {url}')
             suffix = Path(link_to_resource).suffix.lower()
             netloc = urlparse(link_to_resource).netloc
             path = urlparse(link_to_resource).path
@@ -49,7 +60,11 @@ def download_resources(url: str, soup: Any, dir: str) -> Any:  # noqa C901
             print('\x1b[3m\x1b[32m✓', end=' ')
             print('\x1b[1m\x1b[37m', link_to_resource)
             with open(path_to_resource, 'wb') as file:
-                file.write(response.content)
+                try:
+                    file.write(response.content)
+                except PermissionError:
+                    logger_pars('PermissionError')
+                    print('нет прав доступа')
     return soup
 
 
