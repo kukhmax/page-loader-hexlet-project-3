@@ -3,13 +3,10 @@ from page_loader.engine import make_prettify
 from page_loader.parser_images import download_images
 from page_loader.parser_resources import download_resources
 from page_loader.utilities import make_dir_and_soup
-from page_loader.engine import download
-import tempfile
 import requests_mock
 import requests
 import pytest
 import re
-import os
 
 
 @pytest.mark.parametrize('url, path_to_dir, result', [
@@ -77,10 +74,9 @@ def test_download_resourses(tmp_path):
 
 
 def test_isexceptions(tmp_path):
-    with requests_mock.Mocker() as m:
+    with requests_mock.Mocker() as mock:
         url = "https://ru.hexlet.io/courses"
-        m.get(url, exс=requests.exceptions.HTTPError)
-        with pytest.raises(requests.exceptions.HTTPError) as excinfo:
+        mock.register_uri('GET', url, exc=requests.HTTPError)
+        with pytest.raises(requests.HTTPError) as excinfo:
             download_html(url, tmp_path)
-        assert excinfo.type is requests.exceptions.HTTPError
-        assert r'HTTP status codes reference [0-9]*' in str(excinfo.value)
+        assert excinfo.type is requests.HTTPError

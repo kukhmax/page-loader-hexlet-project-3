@@ -29,14 +29,14 @@ def main():
             args.output
         )
     except requests.exceptions.Timeout:
-            logger.error(" Very Slow Internet Connection.")
-            print("Very Slow Internet Connection.")
+        logger.error(" Very Slow Internet Connection.")
+        print("Very Slow Internet Connection.")
     except requests.exceptions.ConnectionError:
-            logger.error(" Network Unavailable. Check your connection.")
-            print("Network Unavailable. Check your connection.")
+        logger.error(" Network Unavailable. Check your connection.")
+        print("Network Unavailable. Check your connection.")
     except requests.exceptions.MissingSchema:
-            logger.error(" 503 Service Unavailable. Retrying download ... ")
-            print("503 Service Unavailable. Retrying download ...")
+        logger.error(" 503 Service Unavailable. Retrying download ... ")
+        print("503 Service Unavailable. Retrying download ...")
     else:
         logger.debug(f'download({args.url}) run')
 

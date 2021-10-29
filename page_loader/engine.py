@@ -2,14 +2,12 @@
 
 import os
 import requests
-from requests.models import Response
 from page_loader.parser_resources import download_resources
 from page_loader.utilities import make_dir_and_soup, make_prettify
 from page_loader.utilities import update_url_to_file_name
 import logging
 
 logger_resp = logging.getLogger('app_logger.response')
-
 
 WD = os.getcwd()
 
@@ -29,9 +27,10 @@ def download_html(url: str, path_to_dir: str = WD) -> str:
     """
     try:
         resp = requests.get(url)
-    except requests.exceptions.HTTPError:
+    except IOError:
         logger_resp.error(f'HTTP status codes reference \
 {requests.get(url).status_code} :: URL: {url}')
+        raise requests.HTTPError(f'response {requests.get(url).status_code}')
     path_to_file = update_url_to_file_name(url, path_to_dir)
     with open(path_to_file, 'w+') as f:
         f.write(resp.text)

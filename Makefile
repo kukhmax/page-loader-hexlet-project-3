@@ -15,7 +15,7 @@ patch: check
 	poetry publish --dry-run --username ' ' --password ' '
 
 test:
-	poetry run pytest
+	poetry run pytest -vv
 
 test-coverage:
 	poetry run pytest --cov=page_loader/ tests/ --cov-report xml
