@@ -3,10 +3,19 @@ from page_loader.engine import make_prettify
 from page_loader.parser_images import download_images
 from page_loader.parser_resources import download_resources
 from page_loader.utilities import make_dir_and_soup
+from page_loader.engine import download
+from urllib.parse import urljoin
+from tempfile import TemporaryDirectory
 import requests_mock
 import requests
 import pytest
 import re
+from page_loader.settings_log import logger_config
+import logging.config
+
+logging.config.dictConfig(logger_config)
+
+logger = logging.getLogger('app_logger')
 
 
 @pytest.mark.parametrize('url, path_to_dir, result', [
@@ -58,19 +67,22 @@ def test_download_resourses(tmp_path):
     with open('tests/fixtures/scripts.html') as f:
         text = f.read()
         with requests_mock.Mocker() as mock:
-            mock.get('https://ru.hexlet.io/courses', text=text)
-            path_to_html = download_html('https://ru.hexlet.io/courses',
-                                         tmp_path)
-        soup, dir = make_dir_and_soup(path_to_html)
-        soup = download_resources(
-            'https://ru.hexlet.io/courses', soup, dir
-        )
+            mock.get('https://page-loader.hexlet.repl.co', text=text)
+            path_to_html = download_html(
+                'https://page-loader.hexlet.repl.co', tmp_path
+            )
+        try:
+            soup, dir = make_dir_and_soup(path_to_html)
+            soup = download_resources(
+                'https://page-loader.hexlet.repl.co', soup, dir
+            )
+        except Exception as e:
+            logger.error(f'Unknown error: {e}')
         path_to_html = make_prettify(path_to_html, soup)
         with open(path_to_html) as f:
             content = f.read()
-            res = re.sub(r'(?<=src=\"|ref=\")[\/\-\_a-zA-Z0-9]{0,}(?=ru-hexlet-io-courses_f)', '', content)  # noqa E501
             with open('tests/fixtures/scripts_result.html') as f1:
-                assert res == f1.read()
+                assert content == f1.read()
 
 
 def test_isexceptions(tmp_path):
@@ -80,3 +92,13 @@ def test_isexceptions(tmp_path):
         with pytest.raises(requests.HTTPError) as excinfo:
             download_html(url, tmp_path)
         assert excinfo.type is requests.HTTPError
+
+
+@pytest.mark.parametrize('code', [404, 500])
+def test_response_with_error(requests_mock, code):
+    url = urljoin("https://ru.hexlet.io/courses", str(code))
+    requests_mock.get(url, status_code=code)
+
+    with TemporaryDirectory() as tmpdirname:
+        with pytest.raises(Exception):
+            assert download(url, tmpdirname)

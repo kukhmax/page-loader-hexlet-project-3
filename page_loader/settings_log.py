@@ -1,7 +1,7 @@
 import logging
 
 
-class MegsHandler(logging.Handler):
+class MegaHandler(logging.Handler):
     def __init__(self, filename):
         logging.Handler.__init__(self)
         self.filename = filename
@@ -28,7 +28,7 @@ logger_config = {
             'formatter': 'std_format'
         },
         'file': {
-            '()': MegsHandler,
+            '()': MegaHandler,
             'level': 'DEBUG',
             'filename': 'debug.log',
             'formatter': 'std_format'
@@ -37,11 +37,11 @@ logger_config = {
     'loggers': {
         'app_logger': {
             'level': 'DEBUG',
-            'handlers': ['file']
+            'handlers': ['file', 'console']
         },
         'app_logger.response': {
             'level': 'DEBUG',
-            'handlers': ['console', 'file']
+            'handlers': ['file', 'console']
         }
     }
 }

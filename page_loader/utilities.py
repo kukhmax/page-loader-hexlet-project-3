@@ -6,9 +6,16 @@ from bs4 import BeautifulSoup
 from urllib.parse import urlparse, urlunparse
 from typing import Any, Tuple
 import logging
-import shutil
 
 logger_util = logging.getLogger('app_logger.util')
+
+
+class AppError(Exception):
+    pass
+
+
+class AppConnectionError(AppError):
+    pass
 
 
 def make_dir_and_soup(path_to_html: str) -> Tuple[Any, str]:
@@ -24,13 +31,17 @@ def make_dir_and_soup(path_to_html: str) -> Tuple[Any, str]:
              dir: path to directory
     """
     with open(path_to_html) as f:
-        dir = re.sub('.html$', '_files', path_to_html)
+        dir = re.sub(r'.html$', '_files', path_to_html)
         try:
             os.mkdir(dir)
-        except FileExistsError:
-            logger_util.exception(f"directory '{dir}' is exists")
-            shutil.rmtree(dir)
-            os.mkdir(dir)
+        except FileExistsError as e:
+            logger_util.error(e)
+            # logger_util.exception(f"directory '{dir}' is exists")
+            raise AppError(f"directory '{dir}' is exists") from e
+        except OSError as e:
+            # logger_util.debug(e)
+            logger_util.error(f"Can't create directory. {e}")
+            raise AppError(f"Can't create directory. {e}") from e
         soup = BeautifulSoup(f, 'html.parser')
     return soup, dir
 
@@ -75,5 +86,5 @@ def make_prettify(path_to_html, soup):
     """
     with open(path_to_html, 'w+') as update_file:
         content = soup.prettify()
-        update_file.write(re.sub(r'\/>', '>', content))
+        update_file.write(content)
     return path_to_html

@@ -1,9 +1,9 @@
 import argparse
-from page_loader.engine import download, WD
-import requests
+from page_loader.engine import download, WD, AppError
 import logging.config
 import logging
 from page_loader.settings_log import logger_config
+import sys
 
 logging.config.dictConfig(logger_config)
 
@@ -24,21 +24,22 @@ def main():
     args = parser.parse_args()
 
     try:
-        download(
+        file_path = download(
             args.url,
             args.output
         )
-    except requests.exceptions.Timeout:
-        logger.error(" Very Slow Internet Connection.")
-        print("Very Slow Internet Connection.")
-    except requests.exceptions.ConnectionError:
-        logger.error(" Network Unavailable. Check your connection.")
-        print("Network Unavailable. Check your connection.")
-    except requests.exceptions.MissingSchema:
-        logger.error(" 503 Service Unavailable. Retrying download ... ")
-        print("503 Service Unavailable. Retrying download ...")
+    except AppError as e:
+        logger.error(e)
+        print(e)
+        sys.exit(1)
+    except Exception as e:
+        logger.error(f'Unknown error: {e}')
+        sys.exit(1)
     else:
-        logger.debug(f'download({args.url}) run')
+        # logger.debug(f'download({args.url}) run')
+        print(f"\x1b[3m\x1b[32mPage was successfuly \
+downloaded into '{file_path}'\x1b[0m\x1b[37m")
+        sys.exit(0)
 
 
 if __name__ == '__main__':
