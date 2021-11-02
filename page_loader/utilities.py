@@ -54,12 +54,12 @@ def get_resourсe_url(url: str, src: str) -> Any:
     scheme = urlparse(src).scheme
     if src_netloc == domain:
         if scheme == '':
-            scheme = 'https'
+            scheme = urlparse(url).scheme
             return urlunparse((scheme, domain, path, '', '', ''))
         else:
             return src
     elif src_netloc == '':
-        scheme = 'https'
+        scheme = urlparse(url).scheme
         return urlunparse((scheme, domain, path, '', '', ''))
     else:
         return None
