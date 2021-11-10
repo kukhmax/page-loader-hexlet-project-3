@@ -33,6 +33,5 @@ check: selfcheck test lint
 build: check
 	rm -Rvf dist/
 	poetry build
-	poetry publish --dry-run --username ' ' --password ' '
 
 .PHONY: install test lint selfcheck check build

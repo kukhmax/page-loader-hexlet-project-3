@@ -37,8 +37,8 @@ def main():
         sys.exit(1)
     else:
         # logger.debug(f'download({args.url}) run')
-        print(f"\x1b[3m\x1b[32mPage was successfuly \
-downloaded into '{file_path}'\x1b[0m\x1b[37m")
+        print(f"Page was successfuly \
+downloaded into '{file_path}'")
         sys.exit(0)
 
 
