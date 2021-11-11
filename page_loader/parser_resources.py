@@ -109,7 +109,7 @@ def make_file_name(link_to_resource: str) -> str:
 def change_link_to_path(dir, list_of_tags, index, file_name):
     work_dir = re.sub(r'[\/\-\_a-zA-Z0-9]{0,}(?=\/)\/', '', dir)
 
-    if SCRIPT in str(list_of_tags[index]) or IMG in str(list_of_tags[index]):
+    if SRC in str(list_of_tags[index]):
         list_of_tags[index][SRC] = os.path.join(work_dir, file_name)
-    elif LINK in str(list_of_tags[index]):
+    elif HREF in str(list_of_tags[index]):
         list_of_tags[index][HREF] = os.path.join(work_dir, file_name)
