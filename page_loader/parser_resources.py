@@ -23,7 +23,7 @@ class AppFileError(OSError):
     pass
 
 
-def download_resources(url: str, soup: Any, dir: str) -> Any:  # noqa C901
+def download_resources(url: str, soup: Any, dir: str) -> Any:
     """Downloads scripts and links from a HTML file and replaces their paths
 
         Args:
@@ -34,12 +34,11 @@ def download_resources(url: str, soup: Any, dir: str) -> Any:  # noqa C901
         Retruns:
             path_to_html(str): path to the modified html file
     """
-    list_of_links = get_links(soup)
+    list_of_links, list_of_tags = get_links_and_tags(soup, url)
     spinner = MySpinner(' ')
     state = 'go'
     while state != 'FINISHED':
-        for link in list_of_links:
-            link_to_resource = urljoin(url, link[0])
+        for index, link_to_resource in enumerate(list_of_links):
             if urlparse(url).netloc != urlparse(link_to_resource).netloc:
                 continue
 
@@ -52,42 +51,46 @@ def download_resources(url: str, soup: Any, dir: str) -> Any:  # noqa C901
                 continue
 
             file_name = make_file_name(link_to_resource)
-            work_dir = re.sub(r'[\/\-\_a-zA-Z0-9]{0,}(?=\/)\/', '', dir)
+            change_link_to_path(dir, list_of_tags, index, file_name)
 
-            if link[1] == SCRIPT or link[1] == IMG:
-                logger_pars.debug(soup.find_all(src=link[0]))
-                soup.find(src=link[0])[SRC] = os.path.join(work_dir,
-                                                           file_name)
-            elif link[1] == LINK:
-                soup.find(href=link[0])[HREF] = os.path.join(work_dir,
-                                                             file_name)
             spinner.next()
             print(link_to_resource)
 
-            path_to_resource = os.path.join(dir, file_name)
-            with open(path_to_resource, 'wb') as file:
-                try:
-                    file.write(response.content)
-                except PermissionError:
-                    logger_pars.error(f'PermissionError: {path_to_resource}')
-                    raise PermissionError(f"You don't have permission \
-to {path_to_resource}")
-                except OSError as e:
-                    logger_pars.error(f'Unknown error: {e}-{path_to_resource}')
-                    raise AppFileError(e) from e
+            write_content_of_resource_to_file(dir, file_name, response)
+
         state = 'FINISHED'
     return soup
 
 
-def get_links(soup: Any) -> List[Tuple[Any, str]]:
+def write_content_of_resource_to_file(dir, file_name, response):
+    path_to_resource = os.path.join(dir, file_name)
+    with open(path_to_resource, 'wb') as file:
+        try:
+            file.write(response.content)
+        except PermissionError:
+            logger_pars.error(f'PermissionError: {path_to_resource}')
+            raise PermissionError(f"You don't have permission \
+to {path_to_resource}")
+        except OSError as e:
+            logger_pars.error(f'Unknown error: {e}-{path_to_resource}')
+            raise AppFileError(e) from e
+
+
+def get_links_and_tags(soup: Any, url: str) -> Tuple[List[str], List[Any]]:
     """Get list of links to resources"""
     tags = {IMG: SRC, SCRIPT: SRC, LINK: HREF}
-    tags_list = []
-    for tag in tags.keys():
-        tags_list.extend(
-            [(source.get(tags[tag]), tag) for source in soup(tag)]
+    list_of_tags = []
+    list_of_links = []
+    for tag_parent, tag in tags.items():
+        list_of_links.extend(
+            [urljoin(
+                url, source.get(tags[tag_parent])
+            ) for source in soup(tag_parent)]
         )
-    return tags_list
+        list_of_tags.extend(
+            [source for source in soup(tag_parent)]
+        )
+    return list_of_links, list_of_tags
 
 
 def make_file_name(link_to_resource: str) -> str:
@@ -101,3 +104,12 @@ def make_file_name(link_to_resource: str) -> str:
                  f'{netloc}{path}').rsplit('-', 1)
     file_name = f'{tmp[0]}.{tmp[1]}'
     return file_name
+
+
+def change_link_to_path(dir, list_of_tags, index, file_name):
+    work_dir = re.sub(r'[\/\-\_a-zA-Z0-9]{0,}(?=\/)\/', '', dir)
+
+    if SCRIPT in str(list_of_tags[index]) or IMG in str(list_of_tags[index]):
+        list_of_tags[index][SRC] = os.path.join(work_dir, file_name)
+    elif LINK in str(list_of_tags[index]):
+        list_of_tags[index][HREF] = os.path.join(work_dir, file_name)
