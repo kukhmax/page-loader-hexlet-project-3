@@ -119,5 +119,5 @@ def change_link_to_path(dir, tag, file_name):
     if IMG in str(tag) or SCRIPT in str(tag):
         if HREF not in str(tag):
             tag[SRC] = os.path.join(work_dir, file_name)
-    elif LINK in str(tag):
-            tag[HREF] = os.path.join(work_dir, file_name)
+    if LINK in str(tag):
+        tag[HREF] = os.path.join(work_dir, file_name)
