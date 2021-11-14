@@ -51,7 +51,15 @@ def make_soup(path_to_html: str) -> Any:
 
 
 def update_url_to_file_name(url: str, path_to_dir: str) -> str:
-    """Collects the full path to the file"""
+    """Collects the full path to the
+
+        Args:
+            url(str): url
+            path_to_dir(str): path to directory
+
+        Returns:
+            absolute path to file
+    """
     if Path(url).suffix == '.html':
         update_url = re.sub(r'-html$', '.html',
                             re.sub(r'\W', '-',
@@ -63,13 +71,14 @@ def update_url_to_file_name(url: str, path_to_dir: str) -> str:
     return os.path.join(path_to_dir, update_url)
 
 
-def make_prettify(path_to_html, soup):
+def make_prettify(path_to_html: str, soup: Any) -> str:
     """Modifies the parse tree into a nicely formatted Unicode string,
        where each tag and each line is output on a separate line
 
        Agrs:
             path_to_html(str): path to html file
-            soup(str): content of html file
+            soup(Any): object, which represents the document
+                  as a nested data structure
 
        Returns:
             path to modified html file

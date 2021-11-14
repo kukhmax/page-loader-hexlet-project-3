@@ -1,7 +1,4 @@
 from page_loader.engine import download_html, update_url_to_file_name
-from page_loader.engine import make_prettify
-from page_loader.parser_resources import download_resources
-from page_loader.utilities import make_dir_to_save_files, make_soup
 from page_loader.engine import download
 from urllib.parse import urljoin
 from tempfile import TemporaryDirectory
@@ -12,7 +9,7 @@ import logging.config
 
 logging.config.dictConfig(logger_config)
 
-test_logger = logging.getLogger('app_logger')
+test_logger = logging.getLogger('app_logger.test')
 
 
 @pytest.mark.parametrize('url, path_to_dir, result', [
@@ -40,23 +37,21 @@ def test_download_html(requests_mock, tmp_path):
         assert f.read() == '<!DOCTYPE html>'
 
 
-def test_download_resourses(tmp_path):
+def test_download(tmp_path):
     with open('tests/fixtures/scripts.html') as f:
         text = f.read()
         with requests_mock.Mocker() as mock:
             mock.get('https://page-loader.hexlet.repl.co', text=text)
-            path_to_html = download_html(
-                'https://page-loader.hexlet.repl.co', tmp_path
-            )
-        try:
-            dir = make_dir_to_save_files(path_to_html)
-            soup = make_soup(path_to_html)
-            soup = download_resources(
-                'https://page-loader.hexlet.repl.co', soup, dir
-            )
-        except Exception as e:
-            test_logger.error(f'Unknown error: {e}')
-        path_to_html = make_prettify(path_to_html, soup)
+            mock.get('https://page-loader.hexlet.repl.co/assets/professions/nodejs.png')  # noqa E501
+            mock.get('https://page-loader.hexlet.repl.co/script.js')
+            mock.get('https://page-loader.hexlet.repl.co/assets/application.css')  # noqa E501
+            mock.get('https://page-loader.hexlet.repl.co/courses')
+            try:
+                path_to_html = download(
+                    'https://page-loader.hexlet.repl.co', tmp_path
+                )
+            except Exception as e:
+                test_logger.error(f'Unknown error: {e}')
         with open(path_to_html) as f:
             content = f.read()
             with open('tests/fixtures/scripts_result.html') as f1:

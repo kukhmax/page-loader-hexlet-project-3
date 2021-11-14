@@ -4,16 +4,12 @@ import os
 import requests
 from page_loader.parser_resources import download_resources
 from page_loader.utilities import make_dir_to_save_files, make_prettify
-from page_loader.utilities import update_url_to_file_name, make_soup
+from page_loader.utilities import update_url_to_file_name, make_soup, AppError
 import logging
 
 WD = os.getcwd()
 
 logger_resp = logging.getLogger('app_logger.response')
-
-
-class AppError(Exception):
-    pass
 
 
 def download(url, path_to_dir=WD):

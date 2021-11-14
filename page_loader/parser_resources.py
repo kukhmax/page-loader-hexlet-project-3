@@ -23,8 +23,8 @@ class AppFileError(OSError):
     pass
 
 
-def download_resources(url: str, soup: Any, dir: str) -> Any:
-    """Downloads scripts and links from a HTML file and replaces their paths
+def download_resources(url: str, soup: Any, dir: str) -> Any:  # noqa C901
+    """Downloads resources from a HTML file and replaces their paths
 
         Args:
             url(str): url of the page we want to download
@@ -32,26 +32,23 @@ def download_resources(url: str, soup: Any, dir: str) -> Any:
             dir(str): path to directory where local resources are saved
 
         Retruns:
-            path_to_html(str): path to the modified html file
+            soup(Any): path to the modified html file
     """
-    list_of_links, list_of_tags = get_links_and_tags(soup, url)
+    list_of_links_and_tags = get_links_and_tags(soup, url)
     spinner = MySpinner(' ')
     state = 'go'
     while state != 'FINISHED':
-        for index, link_to_resource in enumerate(list_of_links):
+        for (link_to_resource, tag) in list_of_links_and_tags:
             if urlparse(url).netloc != urlparse(link_to_resource).netloc:
                 continue
 
-            try:
-                logger_pars.debug(f'link to download is {link_to_resource}')
-                response = requests.get(link_to_resource, stream=True)
-                response.raise_for_status()
-            except requests.exceptions.RequestException as e:
-                logger_pars.error(e)
+            if not request_link_to_resource(link_to_resource):
                 continue
+            else:
+                response = request_link_to_resource(link_to_resource)
 
             file_name = make_file_name(link_to_resource)
-            change_link_to_path(dir, list_of_tags, index, file_name)
+            change_link_to_path(dir, tag, file_name)
 
             spinner.next()
             print(link_to_resource)
@@ -62,38 +59,50 @@ def download_resources(url: str, soup: Any, dir: str) -> Any:
     return soup
 
 
+def request_link_to_resource(link_to_resource):
+    """Make a request for a link with a resource."""
+    try:
+        logger_pars.debug(f'link to download is {link_to_resource}')
+        response = requests.get(link_to_resource, stream=True)
+        response.raise_for_status()
+        return response
+    except requests.exceptions.RequestException as e:
+        logger_pars.error(e)
+    except Exception as e:
+        logger_pars.error(e)
+
+
 def write_content_of_resource_to_file(dir, file_name, response):
+    """Writes content from the resource to a local file."""
     path_to_resource = os.path.join(dir, file_name)
     with open(path_to_resource, 'wb') as file:
         try:
-            file.write(response.content)
+            chunks = response.iter_content(chunk_size=None)
+            for chunk in chunks:
+                file.write(chunk)
         except PermissionError:
             logger_pars.error(f'PermissionError: {path_to_resource}')
-            raise PermissionError(f"You don't have permission \
-to {path_to_resource}")
+            raise PermissionError(f"You don't have permission to {path_to_resource}")  # noqa E501
         except OSError as e:
             logger_pars.error(f'Unknown error: {e}-{path_to_resource}')
             raise AppFileError(e) from e
 
 
-def get_links_and_tags(soup: Any, url: str) -> Tuple[List[str], List[Any]]:
-    """Get list of links to resources"""
+def get_links_and_tags(soup: Any, url: str) -> List[Tuple[str, Any]]:
+    """Get list of links to resources."""
     tags = {IMG: SRC, SCRIPT: SRC, LINK: HREF}
-    list_of_tags = []
-    list_of_links = []
-    for tag_parent, tag in tags.items():
-        list_of_links.extend(
-            [urljoin(
-                url, source.get(tags[tag_parent])
-            ) for source in soup(tag_parent)]
+    list_of_links_and_tags = []
+    for tag in tags.keys():
+        list_of_links_and_tags.extend(
+            [(urljoin(
+                url, source.get(tags[tag])
+            ), source) for source in soup.find_all(tag)]
         )
-        list_of_tags.extend(
-            [source for source in soup(tag_parent)]
-        )
-    return list_of_links, list_of_tags
+    return list_of_links_and_tags
 
 
 def make_file_name(link_to_resource: str) -> str:
+    """Make file name from link to resource."""
     suffix = Path(link_to_resource).suffix.lower()
     netloc = urlparse(link_to_resource).netloc
     path = urlparse(link_to_resource).path
@@ -106,10 +115,11 @@ def make_file_name(link_to_resource: str) -> str:
     return file_name
 
 
-def change_link_to_path(dir, list_of_tags, index, file_name):
+def change_link_to_path(dir, tag, file_name):
+    """Changes link to resources."""
     work_dir = re.sub(r'[\/\-\_a-zA-Z0-9]{0,}(?=\/)\/', '', dir)
 
-    if SRC in str(list_of_tags[index]):
-        list_of_tags[index][SRC] = os.path.join(work_dir, file_name)
-    elif HREF in str(list_of_tags[index]):
-        list_of_tags[index][HREF] = os.path.join(work_dir, file_name)
+    if SRC in str(tag):
+        tag[SRC] = os.path.join(work_dir, file_name)
+    elif HREF in str(tag):
+        tag[HREF] = os.path.join(work_dir, file_name)
