@@ -42,10 +42,12 @@ def download_resources(url: str, soup: Any, dir: str) -> Any:  # noqa C901
             if urlparse(url).netloc != urlparse(link_to_resource).netloc:
                 continue
 
-            if not request_link_to_resource(link_to_resource):
-                continue
-            else:
+            try:
                 response = request_link_to_resource(link_to_resource)
+            except requests.exceptions.RequestException as e:
+                logger_pars.error(e)
+            except Exception as e:
+                logger_pars.error(e)
 
             file_name = make_file_name(link_to_resource)
             change_link_to_path(dir, tag, file_name)
@@ -61,15 +63,10 @@ def download_resources(url: str, soup: Any, dir: str) -> Any:  # noqa C901
 
 def request_link_to_resource(link_to_resource):
     """Make a request for a link with a resource."""
-    try:
-        logger_pars.debug(f'link to download is {link_to_resource}')
-        response = requests.get(link_to_resource, stream=True)
-        response.raise_for_status()
-        return response
-    except requests.exceptions.RequestException as e:
-        logger_pars.error(e)
-    except Exception as e:
-        logger_pars.error(e)
+    logger_pars.debug(f'link to download is {link_to_resource}')
+    response = requests.get(link_to_resource, stream=True)
+    response.raise_for_status()
+    return response
 
 
 def write_content_of_resource_to_file(dir, file_name, response):
@@ -119,7 +116,8 @@ def change_link_to_path(dir, tag, file_name):
     """Changes link to resources."""
     work_dir = re.sub(r'[\/\-\_a-zA-Z0-9]{0,}(?=\/)\/', '', dir)
 
-    if IMG in str(tag) and HREF not in str(tag) or SCRIPT in str(tag) and HREF not in str(tag):  # noqa E501
-        tag[SRC] = os.path.join(work_dir, file_name)
+    if IMG in str(tag) or SCRIPT in str(tag):
+        if HREF not in str(tag):
+            tag[SRC] = os.path.join(work_dir, file_name)
     elif LINK in str(tag):
         tag[HREF] = os.path.join(work_dir, file_name)

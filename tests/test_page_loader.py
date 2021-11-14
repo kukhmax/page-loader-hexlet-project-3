@@ -4,6 +4,7 @@ from urllib.parse import urljoin
 from tempfile import TemporaryDirectory
 import requests_mock
 import pytest
+import os
 from page_loader.settings_log import logger_config
 import logging.config
 
@@ -31,6 +32,7 @@ def test_output(url, path_to_dir, result):
 
 
 def test_download_html(requests_mock, tmp_path):
+    """Tests function 'download_html'."""
     requests_mock.get('https://ru.hexlet.io/courses', text='<!DOCTYPE html>')
     path_to_tmp_file = download_html('https://ru.hexlet.io/courses', tmp_path)
     with open(path_to_tmp_file) as f:
@@ -38,7 +40,8 @@ def test_download_html(requests_mock, tmp_path):
 
 
 def test_download(tmp_path):
-    with open('tests/fixtures/scripts.html') as f:
+    """Tests function 'download'."""
+    with open('tests/fixtures/resources.html') as f:
         text = f.read()
         with requests_mock.Mocker() as mock:
             mock.get('https://page-loader.hexlet.repl.co', text=text)
@@ -54,7 +57,7 @@ def test_download(tmp_path):
                 test_logger.error(f'Unknown error: {e}')
         with open(path_to_html) as f:
             content = f.read()
-            with open('tests/fixtures/scripts_result.html') as f1:
+            with open('tests/fixtures/resources_result.html') as f1:
                 assert content == f1.read()
 
 
@@ -66,3 +69,29 @@ def test_response_with_error(requests_mock, code):
     with TemporaryDirectory() as tmpdirname:
         with pytest.raises(Exception):
             assert download(url, tmpdirname)
+
+
+def test_download_resourses(tmp_path):
+    """Tests correct download resources."""
+    with open('tests/fixtures/html.html') as f:
+        text = f.read()
+    with open('tests/fixtures/script.js') as f1:
+        js_code = f1.read()
+
+    with requests_mock.Mocker() as mock:
+        mock.get('https://page-loader.hexlet.repl.co', text=text)
+        mock.get('https://page-loader.hexlet.repl.co/script.js', text=js_code)
+        try:
+            download(
+                'https://page-loader.hexlet.repl.co', tmp_path
+            )
+        except Exception as e:
+            test_logger.error(f'Unknown error: {e}')
+        testpath = os.path.join(
+            tmp_path,
+            'page-loader-hexlet-repl-co_files/page-loader-hexlet-repl-co-script.js'  # noqa E501
+        )
+        assert os.path.exists(testpath)
+        with open('tests/fixtures/script.js') as script:
+            with open(testpath) as test:
+                assert script.read() == test.read()
