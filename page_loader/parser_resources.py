@@ -116,9 +116,9 @@ def change_link_to_path(dir, tag, file_name):
     """Changes link to resources."""
     work_dir = re.sub(r'[\/\-\_a-zA-Z0-9]{0,}(?=\/)\/', '', dir)
 
-    if IMG in str(tag) or SCRIPT in str(tag):
-        if HREF not in str(tag):
-            tag[SRC] = os.path.join(work_dir, file_name)
-    elif LINK in str(tag):
+    if LINK in str(tag):
         if SRC not in str(tag):
             tag[HREF] = os.path.join(work_dir, file_name)
+    elif IMG in str(tag) or SCRIPT in str(tag):
+        if HREF not in str(tag):
+            tag[SRC] = os.path.join(work_dir, file_name)
