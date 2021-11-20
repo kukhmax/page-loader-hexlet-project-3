@@ -34,31 +34,33 @@ def download_resources(url: str, soup: Any, dir: str) -> Any:  # noqa C901
         Retruns:
             soup(Any): path to the modified html file
     """
-    list_of_links_and_tags = get_links_and_tags(soup, url)
+    links_and_tags_of_resourses = get_links_and_tags_of_resources(soup, url)
     spinner = MySpinner(' ')
-    state = 'go'
-    while state != 'FINISHED':
-        for (link_to_resource, tag) in list_of_links_and_tags:
-            if urlparse(url).netloc != urlparse(link_to_resource).netloc:
-                continue
+    for (link_to_resource, tag) in links_and_tags_of_resourses:
+        if not is_local_resource(url, link_to_resource):
+            continue
 
-            try:
-                response = request_link_to_resource(link_to_resource)
-            except requests.exceptions.RequestException as e:
-                logger_pars.error(e)
-            except Exception as e:
-                logger_pars.error(e)
+        try:
+            response = request_link_to_resource(link_to_resource)
+        except requests.exceptions.RequestException as e:
+            logger_pars.error(e)
+            continue
 
-            file_name = make_file_name(link_to_resource)
-            change_link_to_path(dir, tag, file_name)
+        file_name = make_file_name(link_to_resource)
+        change_link_to_file_path(dir, tag, file_name)
 
-            spinner.next()
-            print(link_to_resource)
+        spinner.next()
+        print(link_to_resource)
 
-            write_content_of_resource_to_file(dir, file_name, response)
+        write_content_of_resource_to_file(dir, file_name, response)
 
-        state = 'FINISHED'
     return soup
+
+
+def is_local_resource(url: str, link_to_resource: str) -> bool:
+    if urlparse(url).netloc != urlparse(link_to_resource).netloc:
+        return False
+    return True
 
 
 def request_link_to_resource(link_to_resource):
@@ -72,30 +74,31 @@ def request_link_to_resource(link_to_resource):
 def write_content_of_resource_to_file(dir, file_name, response):
     """Writes content from the resource to a local file."""
     path_to_resource = os.path.join(dir, file_name)
-    with open(path_to_resource, 'wb') as file:
-        try:
+    try:
+        with open(path_to_resource, 'wb') as file:
             chunks = response.iter_content(chunk_size=None)
             for chunk in chunks:
                 file.write(chunk)
-        except PermissionError:
-            logger_pars.error(f'PermissionError: {path_to_resource}')
-            raise PermissionError(f"You don't have permission to {path_to_resource}")  # noqa E501
-        except OSError as e:
-            logger_pars.error(f'Unknown error: {e}-{path_to_resource}')
-            raise AppFileError(e) from e
+    except PermissionError:
+        logger_pars.error(f'PermissionError: {path_to_resource}')
+        raise PermissionError(f"You don't have permission to {path_to_resource}")  # noqa E501
+    except OSError as e:
+        logger_pars.error(f'Unknown error: {e}-{path_to_resource}')
+        raise AppFileError(e) from e
 
 
-def get_links_and_tags(soup: Any, url: str) -> List[Tuple[str, Any]]:
+def get_links_and_tags_of_resources(soup: Any,
+                                    url: str) -> List[Tuple[str, Any]]:
     """Get list of links to resources."""
     tags = {IMG: SRC, SCRIPT: SRC, LINK: HREF}
-    list_of_links_and_tags = []
-    for tag in tags.keys():
-        list_of_links_and_tags.extend(
+    links_and_tags_of_resourses = []
+    for tag in tags:
+        links_and_tags_of_resourses.extend(
             [(urljoin(
                 url, source.get(tags[tag])
-            ), source) for source in soup.find_all(tag)]
+            ), source) for source in soup.find_all(tag) if tags[tag]]
         )
-    return list_of_links_and_tags
+    return links_and_tags_of_resourses
 
 
 def make_file_name(link_to_resource: str) -> str:
@@ -112,7 +115,7 @@ def make_file_name(link_to_resource: str) -> str:
     return file_name
 
 
-def change_link_to_path(dir, tag, file_name):
+def change_link_to_file_path(dir, tag, file_name):
     """Changes link to resources."""
     work_dir = re.sub(r'[\/\-\_a-zA-Z0-9]{0,}(?=\/)\/', '', dir)
 

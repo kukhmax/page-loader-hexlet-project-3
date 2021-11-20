@@ -33,11 +33,14 @@ def download_html(url: str, path_to_dir: str = WD) -> str:
 {requests.get(url).status_code}') from e
 
     path_to_file = update_url_to_file_name(url, path_to_dir)
-    with open(path_to_file, 'w+') as f:
-        try:
+    try:
+        with open(path_to_file, 'w+') as f:
             f.write(resp.text)
-        except PermissionError:
-            logger_resp.error(f'PermissionError: {path_to_file}')
-            raise PermissionError(f"You don't have permission: \
+    except PermissionError:
+        logger_resp.error(f'PermissionError: {path_to_file}')
+        raise PermissionError(f"You don't have permission: \
 '{path_to_file}'")
+    except AppError as err:
+        logger_resp.error(f'Unknown error: {err}')
+        raise AppError(f'Unknown error: {err}') from err
     return path_to_file

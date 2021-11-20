@@ -36,7 +36,6 @@ def main():
         logger.error(f'Unknown error: {e}')
         sys.exit(1)
     else:
-        # logger.debug(f'download({args.url}) run')
         print(f"Page was successfuly \
 downloaded into '{file_path}'")
         sys.exit(0)
