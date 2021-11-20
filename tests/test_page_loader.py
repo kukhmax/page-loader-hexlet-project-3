@@ -12,22 +12,15 @@ logging.config.dictConfig(logger_config)
 test_logger = logging.getLogger('app_logger.test')
 
 
-@pytest.mark.parametrize('url, path_to_dir, result', [
-    ('https://cdn2.hexlet.io/courses',
-     'var/tmp',
-     'var/tmp/cdn2-hexlet-io-courses.html'),
-    ('http://cdn2.hexlet.io/courses',
-     'var/tmp',
-     'var/tmp/cdn2-hexlet-io-courses.html'),
+@pytest.mark.parametrize('url, result', [
+    ('https://cdn2.hexlet.io/courses', 'cdn2-hexlet-io-courses.html'),
+    ('http://cdn2.hexlet.io/courses', 'cdn2-hexlet-io-courses.html'),
     ('cdn2.hexlet.io/courses/https://end',
-     'var/bin',
-     'var/bin/cdn2-hexlet-io-courses-https---end.html'),
-    ('https://cdn2.hexlet.io/courses.html',
-     'tmp/tmp',
-     'tmp/tmp/cdn2-hexlet-io-courses.html'),
+     'cdn2-hexlet-io-courses-https---end.html'),
+    ('https://cdn2.hexlet.io/courses.html', 'cdn2-hexlet-io-courses.html'),
 ])
-def test_output(url, path_to_dir, result):
-    assert update_url_to_file_name(url, path_to_dir) == result
+def test_output(url, result):
+    assert update_url_to_file_name(url) == result
 
 
 def test_download(tmp_path):

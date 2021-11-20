@@ -23,13 +23,14 @@ class AppFileError(OSError):
     pass
 
 
-def download_resources(url: str, soup: Any, dir: str) -> Any:  # noqa C901
+def download_resources(url: str, soup: Any, full_path_to_dir: str, dir_name: str) -> Any:  # noqa C901
     """Downloads resources from a HTML file and replaces their paths
 
         Args:
             url(str): url of the page we want to download
             soup(Any): content of html file
-            dir(str): path to directory where local resources are saved
+            full_path_to_dir(str): path to directory where local resources are saved  # noqa E501
+            dir_name(str): name of directory where local resources are saved
 
         Retruns:
             soup(Any): path to the modified html file
@@ -47,23 +48,24 @@ def download_resources(url: str, soup: Any, dir: str) -> Any:  # noqa C901
             continue
 
         file_name = make_file_name(link_to_resource)
-        change_link_to_file_path(dir, tag, file_name)
+        change_link_to_file_path(dir_name, tag, file_name)
 
         spinner.next()
         print(link_to_resource)
 
-        write_content_of_resource_to_file(dir, file_name, response)
+        write_content_of_resource_to_file(full_path_to_dir, file_name, response)
 
     return soup
 
 
 def is_local_resource(url: str, link_to_resource: str) -> bool:
+    """Checks is the local domain of the resource """
     if urlparse(url).netloc != urlparse(link_to_resource).netloc:
         return False
     return True
 
 
-def request_link_to_resource(link_to_resource):
+def request_link_to_resource(link_to_resource: str) -> Any:
     """Make a request for a link with a resource."""
     logger_pars.debug(f'link to download is {link_to_resource}')
     response = requests.get(link_to_resource, stream=True)
@@ -71,7 +73,9 @@ def request_link_to_resource(link_to_resource):
     return response
 
 
-def write_content_of_resource_to_file(dir, file_name, response):
+def write_content_of_resource_to_file(dir: str,
+                                      file_name: str,
+                                      response: Any) -> None:
     """Writes content from the resource to a local file."""
     path_to_resource = os.path.join(dir, file_name)
     try:
@@ -93,11 +97,15 @@ def get_links_and_tags_of_resources(soup: Any,
     tags = {IMG: SRC, SCRIPT: SRC, LINK: HREF}
     links_and_tags_of_resourses = []
     for tag in tags:
-        links_and_tags_of_resourses.extend(
-            [(urljoin(
-                url, source.get(tags[tag])
-            ), source) for source in soup.find_all(tag) if tags[tag]]
-        )
+        tuples_links_and_tags = []
+        for source in soup.find_all(tag):
+            if tags[tag]:
+                tuples_links_and_tags.append(
+                    (urljoin(
+                        url, source.get(tags[tag])
+                    ), source)
+                )
+        links_and_tags_of_resourses.extend(tuples_links_and_tags)
     return links_and_tags_of_resourses
 
 
@@ -115,12 +123,9 @@ def make_file_name(link_to_resource: str) -> str:
     return file_name
 
 
-def change_link_to_file_path(dir, tag, file_name):
+def change_link_to_file_path(dir_name: str, tag: Any, file_name: str) -> None:
     """Changes link to resources."""
-    work_dir = re.sub(r'[\/\-\_a-zA-Z0-9]{0,}(?=\/)\/', '', dir)
-
-    if IMG in str(tag) or SCRIPT in str(tag):
-        if HREF not in str(tag):
-            tag[SRC] = os.path.join(work_dir, file_name)
-    if LINK in str(tag):
-        tag[HREF] = os.path.join(work_dir, file_name)
+    if tag.name == IMG or tag.name == SCRIPT:
+        tag[SRC] = os.path.join(dir_name, file_name)
+    if tag.name == LINK:
+        tag[HREF] = os.path.join(dir_name, file_name)
