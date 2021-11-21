@@ -6,7 +6,7 @@
 
 <h3>Description</h3>
 
-This program downloads the page from the network and places it in a specified existing directory 
+This program downloads the page from the network and places it in a specified existing directory. If the directory is not specified, save it in the working directory.
 
 <h3>Program installation</h3>
 
