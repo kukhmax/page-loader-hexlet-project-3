@@ -1,13 +1,13 @@
 #!usr/bin/env python3
 
 import os
-import requests
 import re
-from pathlib import Path
-from urllib.parse import urlparse, urljoin
-from typing import Any, List, Tuple
 import logging
+import requests
+from pathlib import Path
+from typing import Any, List, Tuple
 from progress.spinner import Spinner
+from urllib.parse import urlparse, urljoin
 
 
 logger_pars = logging.getLogger('app_logger.pars')
@@ -86,6 +86,9 @@ def write_content_of_resource_to_file(dir: str,
     except PermissionError:
         logger_pars.error(f'PermissionError: {path_to_resource}')
         raise PermissionError(f"You don't have permission to {path_to_resource}")  # noqa E501
+    except requests.RequestException as err:
+        logger_pars.error(f'Unknown error: {err}')
+        raise AppFileError(err) from err
     except OSError as e:
         logger_pars.error(f'Unknown error: {e}-{path_to_resource}')
         raise AppFileError(e) from e
@@ -109,18 +112,19 @@ def get_links_and_tags_of_resources(soup: Any,
     return links_and_tags_of_resourses
 
 
-def make_file_name(link_to_resource: str) -> str:
+def make_file_name(url: str) -> str:
     """Make file name from link to resource."""
-    suffix = Path(link_to_resource).suffix.lower()
-    netloc = urlparse(link_to_resource).netloc
-    path = urlparse(link_to_resource).path
+    suffix = Path(url).suffix.lower()
+    netloc = urlparse(url).netloc
+    path = urlparse(url).path
 
+    url_without_scheme = '{}{}'.format(netloc, path)
+    url_without_suffix = '{}/{}'.format(Path(url_without_scheme).parent,
+                                        Path(url_without_scheme).stem)
+    update_url = re.sub(r'\W', '-', url_without_suffix)
     if not suffix:
-        path += '.html'
-    tmp = re.sub(r'[^a-zA-Z0-9]+', '-',
-                 f'{netloc}{path}').rsplit('-', 1)
-    file_name = f'{tmp[0]}.{tmp[1]}'
-    return file_name
+        return '{}.html'.format(update_url)
+    return '{}{}'.format(update_url, suffix)
 
 
 def change_link_to_file_path(dir_name: str, tag: Any, file_name: str) -> None:

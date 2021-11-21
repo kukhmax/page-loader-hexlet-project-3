@@ -4,12 +4,22 @@
 [![Test Coverage](https://api.codeclimate.com/v1/badges/85a7d558bfbe0c9d6d7e/test_coverage)](https://codeclimate.com/github/kukhmax/python-project-lvl3/test_coverage)
 [![Linter CI](https://github.com/kukhmax/python-project-lvl3/actions/workflows/python-check.yml/badge.svg)](https://github.com/kukhmax/python-project-lvl3/actions/workflows/python-check.yml)
 
-[![asciicast](https://asciinema.org/a/442233.svg)](https://asciinema.org/a/442233)
+<h3>Description</h3>
 
-[![asciicast](https://asciinema.org/a/443778.svg)](https://asciinema.org/a/443778)
+This program downloads the page from the network and places it in a specified existing directory 
 
-[![asciicast](https://asciinema.org/a/444350.svg)](https://asciinema.org/a/444350)
+<h3>Program installation</h3>
 
-[![asciicast](https://asciinema.org/a/444697.svg)](https://asciinema.org/a/444697)
+<code>pip install git+https://github.com/kukhmax/python-project-lvl3.git</code>
+
+<h3>How to use</h3>
+
+<code>page-loader --output path/to/dir(default: working dir) url</code>
+
+If you need to help
+
+<code>page-loader -h</code>
+
+<h3>Program demonstration </h3>
 
 [![asciicast](https://asciinema.org/a/445512.svg)](https://asciinema.org/a/445512)

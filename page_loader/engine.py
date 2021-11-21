@@ -2,13 +2,13 @@
 
 import os
 import re
+import logging
 import requests
 from pathlib import Path
-from urllib.parse import urlparse
 from typing import Any, Tuple
 from bs4 import BeautifulSoup
+from urllib.parse import urlparse
 from page_loader.parser_resources import download_resources
-import logging
 
 WD = os.getcwd()
 
@@ -48,9 +48,8 @@ def download_html(url: str, path_to_dir: str = WD) -> Tuple[str, str]:
             f.write(resp.text)
     except PermissionError:
         logger_resp.error(f'PermissionError: {full_path_to_file}')
-        raise PermissionError(f"You don't have permission: \
-'{full_path_to_file}'")
-    except AppError as err:
+        raise PermissionError(f"You don't have permission: '{full_path_to_file}'")  # noqa E501
+    except OSError as err:
         logger_resp.error(f'Unknown error: {err}')
         raise AppError(f'Unknown error: {err}') from err
     return full_path_to_file, file_name
@@ -58,13 +57,15 @@ def download_html(url: str, path_to_dir: str = WD) -> Tuple[str, str]:
 
 def update_url_to_file_name(url: str) -> str:
     """Collects the full path to the file."""
-
-    update_path = re.sub(r'\W', '-', '{}{}'.format(
-        urlparse(url).netloc, urlparse(url).path
-    ))
+    url_without_scheme = '{}{}'.format(urlparse(url).netloc,
+                                       urlparse(url).path)
     if Path(url).suffix == '.html':
-        return re.sub(r'-html$', '.html', update_path)
-    return f'{update_path}.html'
+        url_without_suffix = '{}/{}'.format(Path(url_without_scheme).parent,
+                                            Path(url_without_scheme).stem)
+        return '{}.html'.format(re.sub(r'\W', '-', url_without_suffix))
+    return '{}.html'.format(
+        re.sub(r'\W', '-', url_without_scheme)
+    )
 
 
 def make_prettify(path_to_html: str, soup: Any) -> str:
