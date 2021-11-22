@@ -1,6 +1,7 @@
 from page_loader.engine import download, update_url_to_file_name
-from urllib.parse import urljoin
 from tempfile import TemporaryDirectory
+from page_loader.engine import AppError
+from urllib.parse import urljoin
 import requests_mock
 import pytest
 import os
@@ -8,8 +9,6 @@ from page_loader.settings_log import logger_config
 import logging.config
 
 logging.config.dictConfig(logger_config)
-
-test_logger = logging.getLogger('app_logger.test')
 
 
 @pytest.mark.parametrize('url, result', [
@@ -62,5 +61,5 @@ def test_response_with_error(requests_mock, code):
     requests_mock.get(url, status_code=code)
 
     with TemporaryDirectory() as tmpdirname:
-        with pytest.raises(Exception):
+        with pytest.raises(AppError):
             assert download(url, tmpdirname)

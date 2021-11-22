@@ -36,8 +36,7 @@ def main():
         logger.error(f'Unknown error: {e}')
         sys.exit(1)
     else:
-        print(f"Page was successfuly \
-downloaded into '{file_path}'")
+        print(f"Page was successfuly downloaded into '{file_path}'")  # noqa E501
         sys.exit(0)
 
 

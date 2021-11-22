@@ -44,7 +44,7 @@ def download_resources(url: str, soup: Any, full_path_to_dir: str, dir_name: str
         try:
             response = request_link_to_resource(link_to_resource)
         except requests.exceptions.RequestException as e:
-            logger_pars.error(e)
+            logger_pars.error(f"{e} :: link: '{link_to_resource}'")
             continue
 
         file_name = make_file_name(link_to_resource)
