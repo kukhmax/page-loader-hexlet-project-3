@@ -1,4 +1,4 @@
-from page_loader.engine import download, update_url_to_file_name
+from page_loader.engine import download, create_file_name_from_url
 from tempfile import TemporaryDirectory
 from page_loader.engine import AppError
 from urllib.parse import urljoin
@@ -19,7 +19,7 @@ logging.config.dictConfig(logger_config)
     ('https://cdn2.hexlet.io/courses.html', 'cdn2-hexlet-io-courses.html'),
 ])
 def test_output(url, result):
-    assert update_url_to_file_name(url) == result
+    assert create_file_name_from_url(url) == result
 
 
 def test_download(tmp_path):

@@ -5,6 +5,7 @@ import re
 import logging
 import requests
 from pathlib import Path
+from colorama import Fore
 from typing import Any, List, Tuple
 from progress.spinner import Spinner
 from urllib.parse import urlparse, urljoin
@@ -16,7 +17,7 @@ SRC, IMG, SCRIPT, HREF, LINK = 'src', 'img', 'script', 'href', 'link'
 
 
 class MySpinner(Spinner):
-    phases = ['✓ ']
+    phases = [Fore.GREEN + '✓ ' + Fore.RESET]
 
 
 class AppFileError(OSError):
@@ -96,19 +97,20 @@ def write_content_of_resource_to_file(dir: str,
 
 def get_links_and_tags_of_resources(soup: Any,
                                     url: str) -> List[Tuple[str, Any]]:
-    """Get list of links to resources."""
+    """Make list of links to resources
+       and tags with this links
+       and add domain to link if absent
+    """
     tags = {IMG: SRC, SCRIPT: SRC, LINK: HREF}
     links_and_tags_of_resourses = []
     for tag in tags:
-        tuples_links_and_tags = []
         for source in soup.find_all(tag):
-            if tags[tag]:
-                tuples_links_and_tags.append(
+            if tag and tags[tag]:
+                links_and_tags_of_resourses.append(
                     (urljoin(
                         url, source.get(tags[tag])
                     ), source)
                 )
-        links_and_tags_of_resourses.extend(tuples_links_and_tags)
     return links_and_tags_of_resourses
 
 
@@ -129,7 +131,7 @@ def make_file_name(url: str) -> str:
 
 def change_link_to_file_path(dir_name: str, tag: Any, file_name: str) -> None:
     """Changes link to resources."""
-    if tag.name == IMG or tag.name == SCRIPT:
-        tag[SRC] = os.path.join(dir_name, file_name)
-    if tag.name == LINK:
-        tag[HREF] = os.path.join(dir_name, file_name)
+    tags = {IMG: SRC, SCRIPT: SRC, LINK: HREF}
+    if tag.name in tags:
+        subtag = tags[tag.name]
+        tag[subtag] = os.path.join(dir_name, file_name)

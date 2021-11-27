@@ -5,7 +5,7 @@ import re
 import logging
 import requests
 from pathlib import Path
-from typing import Any, Tuple
+from typing import Any
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 from page_loader.parser_resources import download_resources
@@ -20,8 +20,8 @@ class AppError(Exception):
 
 
 def download(url, path_to_dir=WD):
-    path_to_html, file_name = download_html(url, path_to_dir)
-    dir_name = re.sub(r'.html$', '_files', file_name)
+    path_to_html = download_html(url, path_to_dir)
+    dir_name = Path(path_to_html).stem + '_files'
     full_path_to_dir = make_dir_to_save_files(path_to_html)
     soup = make_soup(path_to_html)
     soup_with_path_to_resources = download_resources(url, soup,
@@ -29,7 +29,7 @@ def download(url, path_to_dir=WD):
     return make_prettify(path_to_html, soup_with_path_to_resources)
 
 
-def download_html(url: str, path_to_dir: str = WD) -> Tuple[str, str]:
+def download_html(url: str, path_to_dir: str = WD) -> str:
     """Downloads the content of the site page
        and displays the full path to the uploaded file
     """
@@ -41,7 +41,7 @@ def download_html(url: str, path_to_dir: str = WD) -> Tuple[str, str]:
         raise AppError(f'Error is {e}. Status code is \
 {requests.get(url).status_code}') from e
 
-    file_name = update_url_to_file_name(url)
+    file_name = create_file_name_from_url(url)
     full_path_to_file = os.path.join(path_to_dir, file_name)
     try:
         with open(full_path_to_file, 'w+') as f:
@@ -52,20 +52,20 @@ def download_html(url: str, path_to_dir: str = WD) -> Tuple[str, str]:
     except OSError as err:
         logger_resp.error(f'Unknown error: {err}')
         raise AppError(f'Unknown error: {err}') from err
-    return full_path_to_file, file_name
+    return full_path_to_file
 
 
-def update_url_to_file_name(url: str) -> str:
+def create_file_name_from_url(url: str) -> str:
     """Collects the full path to the file."""
+    def make_format(url):
+        return '{}.html'.format(re.sub(r'\W', '-', url))
     url_without_scheme = '{}{}'.format(urlparse(url).netloc,
                                        urlparse(url).path)
+    url_without_suffix = '{}/{}'.format(Path(url_without_scheme).parent,
+                                        Path(url_without_scheme).stem)
     if Path(url).suffix == '.html':
-        url_without_suffix = '{}/{}'.format(Path(url_without_scheme).parent,
-                                            Path(url_without_scheme).stem)
-        return '{}.html'.format(re.sub(r'\W', '-', url_without_suffix))
-    return '{}.html'.format(
-        re.sub(r'\W', '-', url_without_scheme)
-    )
+        return make_format(url_without_suffix)
+    return make_format(url_without_scheme)
 
 
 def make_prettify(path_to_html: str, soup: Any) -> str:
@@ -80,9 +80,17 @@ def make_prettify(path_to_html: str, soup: Any) -> str:
        Returns:
             path to modified html file
     """
-    with open(path_to_html, 'w+') as update_file:
-        content = soup.prettify()
-        update_file.write(content)
+    try:
+        with open(path_to_html, 'w+') as update_file:
+            content = soup.prettify()
+            update_file.write(content)
+    except PermissionError:
+        logger_resp.error(f'PermissionError: {path_to_html}')
+        raise PermissionError(f"You don't have permission: '{path_to_html}'")  # noqa E501
+    except OSError as err:
+        logger_resp.error(f'Unknown error: {err}')
+        raise AppError(f'Unknown error: {err}') from err
+
     return path_to_html
 
 
@@ -95,7 +103,8 @@ def make_dir_to_save_files(path_to_html: str) -> str:
        Returns:
             dir: path to directory
     """
-    dir = re.sub(r'.html$', '_files', path_to_html)
+    dir = '{}/{}_files'.format(Path(path_to_html).parent,
+                               Path(path_to_html).stem)
     try:
         os.mkdir(dir)
     except FileExistsError as e:
@@ -107,7 +116,7 @@ def make_dir_to_save_files(path_to_html: str) -> str:
     return dir
 
 
-def make_soup(path_to_html: str) -> Any:
+def make_soup(path_to_html: str) -> str:
     """Makes object, which represents
        the document as a nested data structure
 
@@ -118,5 +127,12 @@ def make_soup(path_to_html: str) -> Any:
             soup: object, which represents the document
                   as a nested data structure
     """
-    with open(path_to_html) as f:
-        return BeautifulSoup(f, 'html.parser')
+    try:
+        with open(path_to_html) as f:
+            return BeautifulSoup(f, 'html.parser')
+    except PermissionError:
+        logger_resp.error(f'PermissionError: {path_to_html}')
+        raise PermissionError(f"You don't have permission: '{path_to_html}'")  # noqa E501
+    except OSError as err:
+        logger_resp.error(f'Unknown error: {err}')
+        raise AppError(f'Unknown error: {err}') from err
