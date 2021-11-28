@@ -57,8 +57,6 @@ def download_html(url: str, path_to_dir: str = WD) -> str:
 
 def create_file_name_from_url(url: str) -> str:
     """Collects the full path to the file."""
-    def make_format(url):
-        return '{}.html'.format(re.sub(r'\W', '-', url))
     url_without_scheme = '{}{}'.format(urlparse(url).netloc,
                                        urlparse(url).path)
     url_without_suffix = '{}/{}'.format(Path(url_without_scheme).parent,
@@ -66,6 +64,11 @@ def create_file_name_from_url(url: str) -> str:
     if Path(url).suffix == '.html':
         return make_format(url_without_suffix)
     return make_format(url_without_scheme)
+
+
+def make_format(url):
+    """Makes format with suffix"""
+    return '{}.html'.format(re.sub(r'\W', '-', url))
 
 
 def make_prettify(path_to_html: str, soup: Any) -> str:
